@@ -4,7 +4,7 @@ A static page that reads what the browser it is opened in reports about itself a
 It works in any browser on any device: desktop and mobile, Chrome, Firefox, Safari, Edge and others. When an API
 is missing or throws, the dump records that, and the page keeps going.
 
-Live page: https://kaisa-kucherenko.github.io/test/
+Live page: https://kaisa-kucherenko.github.io/fingerprint/
 
 ## Taking a dump
 
