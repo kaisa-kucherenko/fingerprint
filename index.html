@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BotGuard Fingerprint Checker</title>
+<title>Browser Fingerprint</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'SF Mono', 'Fira Code', monospace; background: #0d1117; color: #c9d1d9; padding: 16px; }
@@ -31,7 +31,7 @@
 </style>
 </head>
 <body>
-<h1>BotGuard Fingerprint Checker</h1>
+<h1>Browser Fingerprint</h1>
 <div class="controls">
   <button onclick="copyJSON()">Copy JSON</button>
   <button onclick="saveJSON()">Save JSON</button>
@@ -251,7 +251,6 @@ function collectAutomation() {
 }
 
 // ── 8. Click Trust Test ──
-// BotGuard: createElement("a") → onclick=None → click() → PointerEvent.isTrusted
 function collectClickTrust() {
   return new Promise(resolve => {
     const a = document.createElement('a');
@@ -267,7 +266,6 @@ function collectClickTrust() {
 }
 
 // ── 9. Permissions.query ──
-// BotGuard: CALL Permissions.query({name:"notifications"}) every request
 async function collectPermissions() {
   const result = {
     'typeof Permissions': safe(() => typeof Permissions),
@@ -283,7 +281,6 @@ async function collectPermissions() {
 }
 
 // ── 10. iframe srcdoc cross-origin test ──
-// BotGuard: createElement("iframe") → srcdoc → contentWindow → check chrome on child
 function collectIframeTest() {
   return new Promise(resolve => {
     const result = {};
@@ -315,8 +312,8 @@ function collectIframeTest() {
   });
 }
 
-// ── 10b. iframe Hardware Spoof Detection ──
-function collectIframeHardwareSpoof() {
+// ── 10b. iframe Hardware Consistency ──
+function collectIframeHardware() {
   const PROPS = [
     {key: 'navigator.hardwareConcurrency', get: w => w.navigator.hardwareConcurrency},
     {key: 'navigator.deviceMemory', get: w => w.navigator.deviceMemory},
@@ -640,7 +637,7 @@ function collectPrototypeIntegrity() {
   };
 }
 
-// ── 14. API Presence (BotGuard random sampling — complete 331+ class pool) ──
+// ── 14. API Presence ──
 function collectAPIPresence() {
   const apis = [
     // ── WebGPU ──
@@ -704,7 +701,7 @@ function collectAPIPresence() {
     // ── Locks / Storage ──
     'LockManager','Lock','StorageManager','StorageBucket','StorageBucketManager',
     'SharedStorage','SharedStorageDeleteMethod',
-    // ── Audio/Media (BotGuard pool) ──
+    // ── Audio/Media ──
     'AudioBufferSourceNode','AudioContext','AudioData','AudioDecoder','AudioEncoder',
     'AudioListener','AudioParam','AudioSinkInfo','AudioWorklet',
     'BaseAudioContext','BiquadFilterNode','BrowserCaptureMediaStreamTrack',
@@ -720,7 +717,7 @@ function collectAPIPresence() {
     'VideoDecoder','VideoEncoder','VideoFrame','VideoPlaybackQuality',
     'ImageCapture','ImageDecoder','ImageTrack','ImageTrackList',
     'VTTCue','BarcodeDetector','IdleDetector','Worklet',
-    // ── SVG (BotGuard pool) ──
+    // ── SVG ──
     'SVGAngle','SVGAnimatedBoolean','SVGAnimatedLength','SVGAnimatedLengthList',
     'SVGAnimationElement','SVGElement',
     'SVGFEColorMatrixElement','SVGFECompositeElement','SVGFEConvolveMatrixElement',
@@ -730,7 +727,7 @@ function collectAPIPresence() {
     'SVGPoint','SVGPointList','SVGRect','SVGSVGElement',
     'SVGStopElement','SVGStringList','SVGSwitchElement',
     'SVGTextContentElement','SVGTransform','SVGTransformList','SVGViewElement',
-    // ── HTML Elements (BotGuard pool) ──
+    // ── HTML Elements ──
     'HTMLAnchorElement','HTMLAreaElement','HTMLBaseElement','HTMLBodyElement',
     'HTMLButtonElement','HTMLCanvasElement','HTMLDetailsElement','HTMLDialogElement',
     'HTMLElement','HTMLFieldSetElement','HTMLFormControlsCollection','HTMLFormElement',
@@ -740,27 +737,27 @@ function collectAPIPresence() {
     'HTMLSelectedContentElement','HTMLSourceElement','HTMLTableElement',
     'HTMLTableRowElement','HTMLTableSectionElement','HTMLTextAreaElement',
     'HTMLTrackElement',
-    // ── CSS (BotGuard pool) ──
+    // ── CSS ──
     'CSSCounterStyleRule','CSSFontFeatureValuesRule','CSSFunctionDeclarations',
     'CSSFunctionRule','CSSKeyframeRule','CSSKeywordValue','CSSMathSum',
     'CSSNamespaceRule','CSSPositionTryDescriptors','CSSPositionValue','CSSRule',
     'CSSSkew','CSSTranslate','Highlight','ViewTimeline',
-    // ── DOM/Core (BotGuard pool) ──
+    // ── DOM/Core ──
     'CharacterData','DOMException','DOMImplementation','DOMMatrix',
     'DOMMatrixReadOnly','DOMQuad','DOMRectList','DOMRectReadOnly',
     'DOMStringList','DOMTokenList','Document','EditContext','Element',
     'EventTarget','Node','Path2D','ShadowRoot','TreeWalker','XPathExpression',
-    // ── Events (BotGuard pool) ──
+    // ── Events ──
     'AnimationEvent','AnimationPlaybackEvent','BeforeInstallPromptEvent',
     'BeforeUnloadEvent','CommandEvent','Event','KeyboardEvent','MouseEvent',
     'NavigateEvent','NavigationCurrentEntryChangeEvent',
     'PresentationConnectionAvailableEvent','SecurityPolicyViolationEvent',
     'SensorErrorEvent','SubmitEvent','TrackEvent','TransitionEvent','WheelEvent',
-    // ── WebRTC (BotGuard pool) ──
+    // ── WebRTC ──
     'RTCDataChannel','RTCEncodedAudioFrame','RTCIceCandidate','RTCIceTransport',
     'RTCPeerConnection','RTCRtpReceiver','RTCRtpSender','RTCStatsReport',
     'RTCTrackEvent',
-    // ── Storage/DB (BotGuard pool) ──
+    // ── Storage/DB ──
     'IDBCursor','IDBDatabase','IDBIndex','IDBObjectStore',
     // ── NFC ──
     'NDEFRecord','NDEFMessage','NDEFReadingEvent',
@@ -787,7 +784,7 @@ function collectAPIPresence() {
     'WebTransportBidirectionalStream',
     // ── CookieStore ──
     'CookieStore','CookieStoreManager','CookieChangeEvent',
-    // ── Other BotGuard pool (mobile + desktop combined 331 classes) ──
+    // ── Other ──
     'AggregateError','Animation','BarProp','CDATASection',
     'CanvasGradient','CanvasRenderingContext2D','CountQueuingStrategy',
     'CustomElementRegistry','CustomStateSet','DataTransfer','DataView',
@@ -813,7 +810,6 @@ function collectAPIPresence() {
     'PerfTestReturnValue','Summarizer','NavigatorManagedData',
     'ProtectedAudience','FetchLaterResult','ContentIndex',
     'CaptureController','CreateMonitor',
-    // ── Mar 13 new classes ──
     'Iterator','DisposableStack','RestrictionTarget','PageSwapEvent',
     'IDBRecord','Fence','WebSocketStream','FontData',
     'ViewTransition','ViewTransitionTypeSet','PageTransitionEvent',
@@ -847,7 +843,6 @@ function collectAPIPresence() {
     'IdleDeadline','SyncManager','AnimationTimeline',
     'ScriptProcessorNode','DOMStringList','NamedNodeMap',
     'NodeIterator','NodeList','ImageData','FileList',
-    // ── Mar 24 new from VV8 logs ──
     'Float16Array','CSSMathMin','CSSMathInvert','CSSNumericValue',
     'CSSLayerBlockRule','CSSPerspective','CSSSupportsRule',
     'MediaSource','MediaSourceHandle','MediaElementAudioSourceNode',
@@ -874,7 +869,7 @@ function collectAPIPresence() {
     result[name] = safe(() => typeof window[name] !== 'undefined');
   });
 
-  // ── Window lowercase properties (BotGuard probes) ──
+  // ── Window lowercase properties ──
   const winProps = [
     'document','getComputedStyle','globalThis','onabort','onchange',
     'ongamepaddisconnected','ononline','onratechange','onscrollsnapchanging',
@@ -884,11 +879,9 @@ function collectAPIPresence() {
     'webkitRTCPeerConnection','webkitResolveLocalFileSystemURL',
     'webkitSpeechRecognition','webkitSpeechRecognitionError',
     'webkitSpeechRecognitionEvent',
-    // Mar 13 new
     'fetchLater','length','onanimationiteration','onbeforeprint',
     'onclose','onmouseout','open','originAgentCluster',
     'releaseEvents','resizeBy','screenTop',
-    // Mar 24 new
     'createImageBitmap','credentialless','onpointermove','orientation',
   ];
   winProps.forEach(name => {
@@ -924,20 +917,17 @@ function collectAPIPresence() {
   return result;
 }
 
-// ── 15. BotGuard Prototype Probes ──
-// BotGuard randomly samples properties from CSS, HTMLImageElement, MouseEvent prototypes
+// ── 15. Prototype Probes ──
 function collectPrototypeProbes() {
   const result = {};
 
-  // ── CSS property existence (BotGuard pool: Feb + Mar combined 45 props) ──
+  // ── CSS property existence ──
   const cssProps = [
-    // Feb 27 pool
     'backgroundBlendMode', 'borderBlockEndWidth', 'borderImageOutset',
     'cornerBlockEndShape', 'cornerTopRightShape', 'fontVariantLigatures',
     'hyphens', 'overrideColors', 'paddingInlineEnd', 'scrollTimelineName',
     'system', 'textBox', 'textWrapMode', 'viewTimelineName',
     'webkitBackgroundClip', 'webkitMaskBoxImageOutset', 'webkitUserModify',
-    // Mar 13 new
     'alignmentBaseline', 'anchorName', 'borderBlockStyle', 'borderBottomWidth',
     'borderRightWidth', 'containIntrinsicInlineSize', 'cornerRightShape',
     'cornerTopLeftShape', 'cssFloat', 'descentOverride', 'initialValue',
@@ -945,7 +935,6 @@ function collectPrototypeProbes() {
     'offsetPosition', 'opacity', 'overflow', 'overflowAnchor', 'overflowWrap',
     'scale', 'sizeAdjust', 'src', 'touchAction', 'translate',
     'webkitBorderEndWidth', 'webkitBorderHorizontalSpacing',
-    // Mar 24 new
     'anchorScope', 'baselineSource', 'borderBottomStyle', 'borderInlineEndWidth',
     'borderInlineStart', 'bufferedRendering', 'columnHeight', 'contentVisibility',
     'cursor', 'fallback', 'fontFamily', 'forcedColorAdjust', 'gap',
@@ -960,14 +949,12 @@ function collectPrototypeProbes() {
     result['CSSStyle.' + p] = safe(() => p in cs);
   });
   result['CSSStyleDeclaration.prototype check'] = safe(() => cs instanceof CSSStyleDeclaration);
-  // Mar 13: BotGuard probes hasOwnProperty on CSSStyleDeclaration — prototype chain integrity
   result['CSSStyleDeclaration.hasOwnProperty exists'] = safe(() => typeof cs.hasOwnProperty === 'function');
   result['CSSStyleDeclaration.hasOwnProperty native'] = safe(() => cs.hasOwnProperty.toString().includes('[native code]'));
 
-  // ── HTMLImageElement prototype chain (BotGuard pool: Feb + Mar combined 62 props) ──
+  // ── HTMLImageElement prototype chain ──
   const img = document.createElement('img');
   const imgProps = [
-    // Feb 27 pool
     'DOCUMENT_FRAGMENT_NODE', 'DOCUMENT_NODE', 'DOCUMENT_POSITION_CONTAINED_BY',
     'DOCUMENT_POSITION_PRECEDING', 'NOTATION_NODE', 'TEXT_NODE',
     'align', 'autofocus', 'childNodes', 'className', 'clientWidth',
@@ -976,7 +963,6 @@ function collectPrototypeProbes() {
     'lang', 'localName', 'nodeName', 'normalize', 'removeAttribute',
     'removeEventListener', 'scrollHeight', 'scrollLeft', 'scrollWidth',
     'setAttribute', 'tagName',
-    // Mar 13 new
     'ATTRIBUTE_NODE', 'DOCUMENT_POSITION_CONTAINS', 'DOCUMENT_POSITION_DISCONNECTED',
     'ENTITY_NODE', 'ENTITY_REFERENCE_NODE',
     'appendChild', 'before', 'border', 'compareDocumentPosition', 'complete',
@@ -985,7 +971,6 @@ function collectPrototypeProbes() {
     'lookupNamespaceURI', 'name', 'offsetLeft', 'offsetTop', 'offsetWidth',
     'referrerPolicy', 'removeAttributeNode', 'removeChild', 'replaceChild',
     'scrollTop', 'title', 'width', 'x',
-    // Mar 24 new
     'CDATA_SECTION_NODE', 'DOCUMENT_POSITION_FOLLOWING', 'ELEMENT_NODE',
     'NOTATION_NODE', 'alt', 'ariaNotify', 'cloneNode',
     'getAttributeNode', 'getAttributeNodeNS', 'hidePopover',
@@ -998,17 +983,14 @@ function collectPrototypeProbes() {
   result['HTMLImageElement proto chain'] = safe(() =>
     img instanceof HTMLImageElement && img instanceof HTMLElement && img instanceof Element
   );
-  // Mar 13: BotGuard probes .constructor — prototype chain integrity
   result['HTMLImageElement.constructor === HTMLImageElement'] = safe(() => img.constructor === HTMLImageElement);
   result['HTMLImageElement.constructor.name'] = safe(() => img.constructor.name);
 
-  // ── MouseEvent prototype integrity (BotGuard pool: Feb + Mar combined) ──
+  // ── MouseEvent prototype integrity ──
   const me = new MouseEvent('click');
   const meProps = [
-    // Feb 27 pool
     'button', 'cancelable', 'metaKey', 'pageX', 'pageY',
     'preventDefault', 'shiftKey',
-    // Mar 13 new
     'altKey', 'bubbles', 'clientX', 'clientY', 'composed', 'ctrlKey',
     'detail', 'eventPhase', 'initEvent', 'initMouseEvent',
     'stopImmediatePropagation', 'stopPropagation', 'which',
@@ -1018,20 +1000,17 @@ function collectPrototypeProbes() {
   meProps.forEach(p => {
     result['MouseEvent.' + p] = safe(() => p in me);
   });
-  // Mar 13: BotGuard checks legacy methods — verify they're native
   result['MouseEvent.initEvent native'] = safe(() => me.initEvent.toString().includes('[native code]'));
   result['MouseEvent.initMouseEvent native'] = safe(() => me.initMouseEvent.toString().includes('[native code]'));
 
   return result;
 }
 
-// ── 16. Navigator Getter CALL Test (Mar 13 new pattern) ──
-// BotGuard now calls getters directly, not just reads properties
+// ── 16. Navigator Getter CALL Test ──
 function collectNavigatorGetterCalls() {
   const result = {};
   const navProto = Navigator.prototype;
 
-  // All navigator properties BotGuard has probed (Feb + Mar)
   const navGetterProps = [
     'webdriver', 'hardwareConcurrency', 'maxTouchPoints', 'deviceMemory',
     'languages', 'plugins', 'mimeTypes', 'connection',
@@ -1057,13 +1036,11 @@ function collectNavigatorGetterCalls() {
   return result;
 }
 
-// ── 17. BotGuard div+CSS Exact Probe (PRIMARY DETECTION VECTOR) ──
-// Replicates exactly what BotGuard does: createElement("div") → .style → read CSS prop
-// This is where our spoofing leaks — 94% fail rate when this probe is present
+// ── 17. div+CSS Probe ──
 function collectDivCSSProbe() {
   const result = {};
 
-  // Step 1: createElement("div") — exactly as BotGuard does
+  // Step 1: createElement("div")
   const div = document.createElement('div');
   result['div created'] = safe(() => div instanceof HTMLDivElement);
   result['div.style exists'] = safe(() => typeof div.style === 'object');
@@ -1092,7 +1069,7 @@ function collectDivCSSProbe() {
     return typeof val;  // should be "string" (empty string)
   });
 
-  // Step 5: check getComputedStyle works (BotGuard probes Window.getComputedStyle)
+  // Step 5: getComputedStyle
   document.body.appendChild(div);
   result['getComputedStyle(div).opacity'] = safe(() => getComputedStyle(div).opacity);
   result['getComputedStyle(div).display'] = safe(() => getComputedStyle(div).display);
@@ -1101,18 +1078,18 @@ function collectDivCSSProbe() {
   return result;
 }
 
-// ── 18. BotGuard MouseEvent Exact Probe ──
+// ── 18. MouseEvent Probe ──
 // Replicates: createEvent("MouseEvents") → read property
 function collectMouseEventProbe() {
   const result = {};
 
-  // Step 1: createEvent (exactly as BotGuard does — NOT new MouseEvent())
+  // Step 1: createEvent, not new MouseEvent()
   const evt = document.createEvent('MouseEvents');
   result['createEvent("MouseEvents") instanceof MouseEvent'] = safe(() => evt instanceof MouseEvent);
   result['createEvent result.constructor.name'] = safe(() => evt.constructor.name);
   result['createEvent result.type'] = safe(() => evt.type);  // should be ""
 
-  // Step 2: check all properties BotGuard probes
+  // Step 2: properties
   result['evt.button'] = safe(() => evt.button);
   result['evt.bubbles'] = safe(() => evt.bubbles);
   result['evt.ctrlKey'] = safe(() => evt.ctrlKey);
@@ -1204,8 +1181,311 @@ async function collectMediaDevices() {
   return result;
 }
 
+// ── 23. Extra surfaces (ks.*) ──
+function rawValue(v) {
+  if (v === null || typeof v === 'string' || typeof v === 'boolean') return v;
+  if (typeof v === 'number') return Number.isFinite(v) ? v : String(v);
+  if (typeof v === 'object') {
+    // JSON.stringify returns undefined for an object whose toJSON does; the key would vanish from the dump.
+    try { const s = JSON.stringify(v); return s === undefined ? String(v) : s; } catch (e) { return String(v); }
+  }
+  return String(v);
+}
+function errorOf(e) { return 'ERROR: ' + (e && e.name) + ': ' + (e && e.message); }
+function raw(fn) {
+  try { return rawValue(fn()); } catch (e) { return errorOf(e); }
+}
+
+// A promise the browser never settles must not hold the dump back.
+function settled(promise, ms) {
+  return Promise.race([
+    Promise.resolve(promise).then(rawValue, errorOf),
+    new Promise(res => setTimeout(() => res('no answer within ' + ms + ' ms'), ms)),
+  ]);
+}
+
+const ERROR_SNIPPETS = ['var z9p3;z9p3.y', 'null.x', 'new Array(-1)', "z8p1.p8='x'", '(1).toString(0)', "x='"];
+
+// No iframe may be attached: frames add "0", "1"… to window's own names.
+function collectWindowClasses() {
+  const r = {};
+  const classes = {};
+  const globals = {};
+  let names;
+  try { names = Object.getOwnPropertyNames(window); } catch (e) {
+    r['ks.Object.getOwnPropertyNames(window)'] = errorOf(e);
+    return r;
+  }
+  for (const k of names) {
+    try {
+      const v = window[k];
+      if (typeof v === 'function' && /^[A-Z]/.test(k) && v.prototype) {
+        classes[k] = raw(() => Object.getOwnPropertyNames(v.prototype));
+      } else {
+        globals[k] = typeof v;
+      }
+    } catch (e) {
+      globals[k] = errorOf(e);
+    }
+  }
+  r['ks.typeof window[name] (non-class globals)'] = rawValue(globals);
+  for (const [k, list] of Object.entries(classes)) r['ks.Object.getOwnPropertyNames(' + k + '.prototype)'] = list;
+  return r;
+}
+
+async function collectExtraSurfaces() {
+  const r = {};
+  r['ks.Object.keys(window.chrome)'] = raw(() => Object.keys(window.chrome));
+  r['ks.Reflect.ownKeys(chrome.app)'] = raw(() => Reflect.ownKeys(window.chrome.app).map(String));
+  r['ks.chrome.app.isInstalled'] = raw(() => window.chrome.app.isInstalled);
+  r['ks.chrome.app.InstallState'] = raw(() => window.chrome.app.InstallState);
+  r['ks.chrome.app.RunningState'] = raw(() => window.chrome.app.RunningState);
+  r['ks.chrome.app.getDetails()'] = raw(() => window.chrome.app.getDetails());
+  r['ks.chrome.app.getIsInstalled()'] = raw(() => window.chrome.app.getIsInstalled());
+  r['ks.chrome.app.runningState()'] = raw(() => window.chrome.app.runningState());
+  // Called without a callback, Chrome logs an error to the console.
+  r['ks.chrome.app.installState(callback)'] = await settled(new Promise((resolve, reject) => {
+    try { window.chrome.app.installState((...args) => resolve(args)); } catch (e) { reject(e); }
+  }), 1000);
+  r['ks."callPhantom" in window'] = raw(() => 'callPhantom' in window);
+  r['ks."Cypress" in window'] = raw(() => 'Cypress' in window);
+  r['ks.Date()'] = raw(() => Date());
+  r['ks.new Date(0).toString()'] = raw(() => new Date(0).toString());
+  r['ks.performance.timing'] = raw(() => performance.timing);
+  r['ks.Function.prototype.toString.call(null)'] = raw(() => Function.prototype.toString.call(null));
+  r['ks.Function.prototype.toString.call({})'] = raw(() => Function.prototype.toString.call({}));
+  const hadZ = Object.prototype.hasOwnProperty.call(window, 'z9p3');
+  for (const code of ERROR_SNIPPETS) {
+    r['ks.error: ' + code] = (() => {
+      try { (0, eval)(code); return 'no throw'; } catch (e) { return e.name + ': ' + e.message; }
+    })();
+  }
+  // The eval'd `var z9p3` stays on window; later reads must see the browser's own globals.
+  if (!hadZ) { try { delete window.z9p3; } catch (e) {} }
+  return r;
+}
+
+// ── 24. Descriptors and media (inj.*) ──
+const DESCRIPTOR_TARGETS = [
+  ['Navigator.prototype', ['userAgent', 'platform', 'vendor', 'language', 'languages', 'hardwareConcurrency',
+    'deviceMemory', 'maxTouchPoints', 'webdriver', 'plugins', 'mimeTypes', 'pdfViewerEnabled', 'cookieEnabled',
+    'connection', 'userAgentData', 'permissions', 'onLine', 'doNotTrack', 'sendBeacon', 'hid', 'bluetooth',
+    'contacts', 'getBattery', 'storage']],
+  ['Screen.prototype', ['width', 'height', 'availWidth', 'availHeight', 'availLeft', 'availTop', 'colorDepth',
+    'pixelDepth', 'orientation']],
+  ['window', ['outerWidth', 'outerHeight', 'innerWidth', 'innerHeight', 'devicePixelRatio', 'screenX', 'screenY',
+    'screenLeft', 'screenTop', 'chrome', 'history', 'isSecureContext', 'opener', 'visualViewport', 'trustedTypes',
+    'PerfTestReturnValue']],
+  ['NetworkInformation.prototype', ['effectiveType', 'rtt', 'downlink', 'saveData', 'type', 'downlinkMax']],
+  ['Performance.prototype', ['memory', 'timing', 'navigation', 'timeOrigin', 'now', 'getEntriesByType',
+    'getEntriesByName']],
+  ['PerformanceNavigationTiming.prototype', ['toJSON', 'type', 'redirectCount']],
+  ['PerformanceResourceTiming.prototype', ['responseStart', 'requestStart', 'connectStart', 'connectEnd',
+    'domainLookupStart', 'domainLookupEnd', 'secureConnectionStart', 'fetchStart', 'responseEnd', 'nextHopProtocol',
+    'encodedBodySize', 'decodedBodySize', 'transferSize']],
+  ['PerformanceTiming.prototype', '*'],
+  ['Object.getPrototypeOf(performance.memory)', ['jsHeapSizeLimit', 'totalJSHeapSize', 'usedJSHeapSize']],
+  ['PluginArray.prototype', ['length', 'item', 'namedItem', 'refresh']],
+  ['Plugin.prototype', ['name', 'filename', 'description', 'length', 'item', 'namedItem']],
+  ['MimeTypeArray.prototype', ['length', 'item', 'namedItem']],
+  ['MimeType.prototype', ['type', 'suffixes', 'description', 'enabledPlugin']],
+  ['PerformanceEntry.prototype', ['entryType', 'startTime']],
+  ['History.prototype', ['length']],
+  ['HTMLIFrameElement.prototype', ['contentWindow', 'contentDocument', 'srcdoc']],
+  ['HTMLMediaElement.prototype', ['canPlayType']],
+  ['Node.prototype', ['appendChild', 'insertBefore']],
+  ['Element.prototype', ['append']],
+  ['Permissions.prototype', ['query']],
+  ['Notification', ['permission', 'requestPermission']],
+  ['Date.prototype', ['toString', 'getTimezoneOffset']],
+  ['Intl.DateTimeFormat.prototype', ['resolvedOptions']],
+  ['Function.prototype', ['toString', 'call', 'apply', 'bind']],
+  ['Object', ['getOwnPropertyDescriptor', 'getOwnPropertyDescriptors', 'getOwnPropertyNames', 'defineProperty',
+    'getPrototypeOf', 'setPrototypeOf', 'keys']],
+  ['Reflect', ['ownKeys', 'getOwnPropertyDescriptor', 'apply']],
+  ['Map.prototype', ['has', 'get', 'set']],
+  ['Error', ['captureStackTrace']],
+  ['NavigatorUAData.prototype', ['brands', 'mobile', 'platform', 'getHighEntropyValues', 'toJSON']],
+  ['WebGLRenderingContext.prototype', ['getParameter', 'getExtension', 'getSupportedExtensions']],
+  ['HTMLCanvasElement.prototype', ['getContext', 'toDataURL']],
+  ['Document.prototype', ['createElement', 'hasFocus', 'visibilityState']],
+];
+
+const MEDIA_TYPES = ['video/mp4; codecs="avc1.42E01E"', 'video/mp4; codecs="hvc1"', 'video/webm; codecs="vp8, vorbis"',
+  'video/webm; codecs="vp9"', 'video/webm; codecs="av01.0.05M.08"', 'video/ogg; codecs="theora"', 'video/x-matroska',
+  'audio/mpeg', 'audio/mp4; codecs="mp4a.40.2"', 'audio/aac', 'audio/x-m4a', 'audio/ogg; codecs="vorbis"',
+  'audio/ogg; codecs="opus"', 'audio/wav', 'audio/flac', 'application/vnd.apple.mpegurl'];
+
+const MEDIA_QUERIES = ['(min-resolution: 2dppx)', '(prefers-color-scheme: dark)', '(pointer: fine)',
+  '(pointer: coarse)', '(any-pointer: coarse)', '(hover: hover)', '(display-mode: browser)',
+  '(prefers-reduced-motion: reduce)'];
+
+function ownerAt(path) {
+  if (path === 'window') return window;
+  if (path === 'Object.getPrototypeOf(performance.memory)') return Object.getPrototypeOf(performance.memory);
+  return path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), window);
+}
+
+function functionShape(fn, otherRealm) {
+  if (typeof fn !== 'function') return String(fn);
+  return {
+    name: raw(() => fn.name),
+    length: raw(() => fn.length),
+    ownKeys: raw(() => Reflect.ownKeys(fn).map(String)),
+    toString: raw(() => Function.prototype.toString.call(fn)),
+    toStringFromIframe: raw(() => otherRealm.Function.prototype.toString.call(fn)),
+  };
+}
+
+function collectDescriptorTargets(otherRealm) {
+  const r = {};
+  for (const [path, list] of DESCRIPTOR_TARGETS) {
+    let owner;
+    try { owner = ownerAt(path); } catch (e) { r['inj.' + path] = errorOf(e); continue; }
+    if (owner == null) { r['inj.' + path] = String(owner); continue; }
+    let members = list;
+    if (list === '*') {
+      try { members = Object.getOwnPropertyNames(owner).filter(k => k !== 'constructor'); } catch (e) {
+        r['inj.Object.getOwnPropertyNames(' + path + ')'] = errorOf(e); continue;
+      }
+    }
+    for (const k of members) {
+      r['inj.Object.getOwnPropertyDescriptor(' + path + ', "' + k + '")'] = raw(() => {
+        const d = Object.getOwnPropertyDescriptor(owner, k);
+        if (!d) return undefined;
+        const out = { enumerable: d.enumerable, configurable: d.configurable };
+        if ('value' in d) {
+          out.writable = d.writable;
+          if (typeof d.value === 'function') out.value = functionShape(d.value, otherRealm);
+          else if (d.value !== null && typeof d.value === 'object') out.typeofValue = typeof d.value;
+          else out.value = rawValue(d.value);
+        } else {
+          out.get = functionShape(d.get, otherRealm);
+          out.set = functionShape(d.set, otherRealm);
+          if (d.get) out.getCallOnPlainObject = raw(() => d.get.call({}));
+        }
+        return out;
+      });
+    }
+  }
+  return r;
+}
+
+function collectWebGL(r) {
+  for (const kind of ['webgl', 'webgl2']) {
+    const p = 'inj.' + kind + '.';
+    let gl;
+    try { gl = document.createElement('canvas').getContext(kind); } catch (e) {
+      r[p + 'getContext'] = errorOf(e); continue;
+    }
+    if (!gl) { r[p + 'getContext'] = rawValue(gl); continue; }
+    for (const name of ['RENDERER', 'VENDOR', 'VERSION', 'SHADING_LANGUAGE_VERSION', 'MAX_TEXTURE_SIZE',
+                        'MAX_RENDERBUFFER_SIZE', 'MAX_VIEWPORT_DIMS', 'ALIASED_LINE_WIDTH_RANGE']) {
+      r[p + 'getParameter(' + name + ')'] = raw(() => {
+        const v = gl.getParameter(gl[name]);
+        return (v && typeof v === 'object' && 'length' in v) ? Array.from(v) : v;
+      });
+    }
+    r[p + 'getExtension(WEBGL_debug_renderer_info) === null'] =
+      raw(() => gl.getExtension('WEBGL_debug_renderer_info') === null);
+    let dbg = null;
+    try { dbg = gl.getExtension('WEBGL_debug_renderer_info'); } catch (e) {}
+    if (dbg) {
+      r[p + 'getParameter(UNMASKED_RENDERER_WEBGL)'] = raw(() => gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL));
+      r[p + 'getParameter(UNMASKED_VENDOR_WEBGL)'] = raw(() => gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL));
+    }
+    r[p + 'getSupportedExtensions()'] = raw(() => gl.getSupportedExtensions());
+    // Past its context limit the browser drops the oldest context.
+    try { const lose = gl.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext(); } catch (e) {}
+  }
+}
+
+// Same constraint as collectWindowClasses.
+function collectWindowKeys() {
+  return {
+    'inj.Object.keys(window).length': raw(() => Object.keys(window).length),
+    'inj.Object.keys(window).indexOf("chrome")': raw(() => Object.keys(window).indexOf('chrome')),
+  };
+}
+
+async function collectDescriptors() {
+  const r = {};
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  iframe.srcdoc = '<p></p>';
+  const loaded = new Promise(res => { iframe.onload = res; setTimeout(res, 1500); });
+  document.body.appendChild(iframe);
+  await loaded;
+  let other = null;
+  try { other = iframe.contentWindow; } catch (e) { r['inj.iframe.contentWindow'] = errorOf(e); }
+  try {
+    Object.assign(r, collectDescriptorTargets(other));
+  } finally {
+    document.body.removeChild(iframe);
+  }
+
+  r['inj.Object.getOwnPropertyNames(navigator)'] = raw(() => Object.getOwnPropertyNames(navigator));
+  r['inj.Object.getOwnPropertyNames(Object.getPrototypeOf(performance.memory))'] =
+    raw(() => Object.getOwnPropertyNames(Object.getPrototypeOf(performance.memory)));
+  r['inj.Array.from(navigator.plugins, p => [p.name, p.filename, p.description, p.length])'] =
+    raw(() => Array.from(navigator.plugins, p => [p.name, p.filename, p.description, p.length]));
+  r['inj.Array.from(navigator.mimeTypes, m => [m.type, m.suffixes, m.description, m.enabledPlugin?.name])'] =
+    raw(() => Array.from(navigator.mimeTypes, m => [m.type, m.suffixes, m.description, m.enabledPlugin?.name]));
+  r['inj.navigator.connection.downlinkMax'] = raw(() => navigator.connection.downlinkMax);
+  r['inj.Notification.permission'] = raw(() => Notification.permission);
+  r['inj.performance.getEntriesByType("navigation")[0]'] = raw(() => performance.getEntriesByType('navigation')[0]);
+  let formFactors;
+  try { formFactors = navigator.userAgentData.getHighEntropyValues(['formFactors']); } catch (e) { formFactors = Promise.reject(e); }
+  r['inj.navigator.userAgentData.getHighEntropyValues(["formFactors"])'] = await settled(formFactors, 1000);
+  r['inj.Intl.DateTimeFormat().resolvedOptions()'] = raw(() => Intl.DateTimeFormat().resolvedOptions());
+  r['inj.new Date(0).toLocaleString()'] = raw(() => new Date(0).toLocaleString());
+  r['inj.(1234567.891).toLocaleString()'] = raw(() => (1234567.891).toLocaleString());
+  r['inj.window.screenLeft'] = raw(() => window.screenLeft);
+  r['inj.window.screenTop'] = raw(() => window.screenTop);
+  r['inj.visualViewport.width'] = raw(() => visualViewport.width);
+  r['inj.visualViewport.height'] = raw(() => visualViewport.height);
+  r['inj.visualViewport.scale'] = raw(() => visualViewport.scale);
+  r['inj.document.documentElement.clientWidth'] = raw(() => document.documentElement.clientWidth);
+  r['inj.document.documentElement.clientHeight'] = raw(() => document.documentElement.clientHeight);
+  for (const q of MEDIA_QUERIES) r['inj.matchMedia("' + q + '").matches'] = raw(() => matchMedia(q).matches);
+  const video = document.createElement('video');
+  for (const t of MEDIA_TYPES) r['inj.canPlayType(\'' + t + '\')'] = raw(() => video.canPlayType(t));
+  collectWebGL(r);
+  return r;
+}
+
+// Used for the file name only; the dump itself stays as the browser reported it.
+function deviceTag(d) {
+  const ua = String(d['navigator.userAgent'] || '');
+  const touch = Number(d['navigator.maxTouchPoints']) || 0;
+  const platform = String(d['navigator.platform'] || '');
+  let os = 'unknown';
+  // iPadOS requests desktop sites with a Mac UA; only touch support tells it apart.
+  if (/iPhone|iPad|iPod/.test(ua) || (platform === 'MacIntel' && touch > 1)) os = 'ios';
+  else if (/Android/.test(ua)) os = 'android';
+  else if (/Windows/.test(ua)) os = 'windows';
+  else if (/CrOS/.test(ua)) os = 'chromeos';
+  else if (/Mac OS X|Macintosh/.test(ua)) os = 'macos';
+  else if (/Linux/.test(ua)) os = 'linux';
+  let type = 'desktop';
+  if (os === 'ios') type = /iPhone|iPod/.test(ua) ? 'mobile' : 'tablet';
+  else if (os === 'android') type = /Mobile/.test(ua) ? 'mobile' : 'tablet';
+  // A phone in desktop mode claims X11 Linux but keeps its touch points.
+  else if (os === 'linux' && /X11/.test(ua) && touch > 0) type = 'pcmode';
+  const m = re => (ua.match(re) || [])[1];
+  let browser = 'unknown', ver;
+  if ((ver = m(/Edg(?:A|iOS)?\/(\d+)/))) browser = 'edge';
+  else if ((ver = m(/(?:OPR|OPT)\/(\d+)/))) browser = 'opera';
+  else if ((ver = m(/SamsungBrowser\/(\d+)/))) browser = 'samsung';
+  else if ((ver = m(/YaBrowser\/(\d+)/))) browser = 'yandex';
+  else if ((ver = m(/(?:Firefox|FxiOS)\/(\d+)/))) browser = 'firefox';
+  else if ((ver = m(/(?:CriOS|Chrome)\/(\d+)/))) browser = 'chrome';
+  else if ((ver = m(/Version\/(\d+)[\d.]*(?: Mobile\/\S+)? Safari\//))) browser = 'safari';
+  return [type, os, browser + (ver || '')].join('_');
+}
+
 // ── Render ──
-function renderSection(title, data, container) {
+function renderSection(title, data, container, collapsed) {
   const section = document.createElement('div');
   section.className = 'section';
   const count = Object.keys(data).length;
@@ -1229,6 +1509,7 @@ function renderSection(title, data, container) {
     row.innerHTML = '<span class="key">' + k + '</span><span class="' + cls + '">' + valStr + '</span>';
     body.appendChild(row);
   }
+  if (collapsed) body.style.display = 'none';
   section.appendChild(header);
   section.appendChild(body);
   container.appendChild(section);
@@ -1240,11 +1521,11 @@ async function runAll() {
   container.innerHTML = '';
 
   // async collectors
-  const [clickTrust, permissions, iframeTest, iframeHwSpoof, uaHighEntropy, mediaDevices] = await Promise.all([
+  const [clickTrust, permissions, iframeTest, iframeHw, uaHighEntropy, mediaDevices] = await Promise.all([
     collectClickTrust(),
     collectPermissions(),
     collectIframeTest(),
-    collectIframeHardwareSpoof(),
+    collectIframeHardware(),
     collectUAHighEntropy(),
     collectMediaDevices(),
   ]);
@@ -1261,28 +1542,44 @@ async function runAll() {
     ['Click Trust Test', clickTrust],
     ['Permissions', permissions],
     ['iframe Cross-Origin Test', iframeTest],
-    ['iframe Hardware Spoof Detection', iframeHwSpoof],
+    ['iframe Hardware Consistency', iframeHw],
     ['toString() Integrity', collectToString()],
     ['Plugins & Codecs', collectMediaCodecs()],
     ['Plugins Detail', collectPluginsDetail()],
     ['Prototype Integrity', collectPrototypeIntegrity()],
-    ['BotGuard Prototype Probes', collectPrototypeProbes()],
+    ['Prototype Probes', collectPrototypeProbes()],
     ['Navigator Getter CALL Test', collectNavigatorGetterCalls()],
-    ['BotGuard div+CSS Exact Probe', collectDivCSSProbe()],
-    ['BotGuard MouseEvent Exact Probe', collectMouseEventProbe()],
+    ['div+CSS Probe', collectDivCSSProbe()],
+    ['MouseEvent Probe', collectMouseEventProbe()],
     ['Document & Environment', collectEnvironment()],
     ['Media Devices', mediaDevices],
-    ['API Presence (BotGuard sampling)', collectAPIPresence()],
+    ['API Presence', collectAPIPresence()],
   ];
 
-  // reset fp
-  Object.keys(fp).forEach(k => delete fp[k]);
-
+  // fp is filled in one step at the end, so Save / Copy never export a half-collected dump.
+  const dump = {};
   for (const [title, data] of sections) {
     renderSection(title, data, container);
-    Object.assign(fp, data);
+    Object.assign(dump, data);
   }
 
+  // Started only after the checks above finish, so their timing stays as it was; their iframes are gone by now.
+  const classes = collectWindowClasses();
+  const windowKeys = collectWindowKeys();
+  const extra = await collectExtraSurfaces();
+  const descriptors = await collectDescriptors();
+  const added = [
+    ['Extra surfaces (ks.*)', extra],
+    ['Window classes and globals (ks.*)', classes],
+    ['Descriptors and media (inj.*)', Object.assign(windowKeys, descriptors)],
+  ];
+  for (const [title, data] of added) {
+    renderSection(title, data, container, true);
+    Object.assign(dump, data);
+  }
+
+  Object.keys(fp).forEach(k => delete fp[k]);
+  Object.assign(fp, dump);
   fp._timestamp = new Date().toISOString();
   fp._url = location.href;
   fp._userAgent = navigator.userAgent;
@@ -1306,7 +1603,7 @@ function saveJSON() {
   const blob = new Blob([JSON.stringify(fp, null, 2)], {type: 'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'fingerprint_' + Date.now() + '.json';
+  a.download = 'fingerprint_' + Date.now() + '_' + deviceTag(fp) + '.json';
   a.click();
 }
 
