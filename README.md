@@ -68,7 +68,7 @@ the browser returned. The values are encoded like this:
 | array or object | its `JSON.stringify` text (so inside it `undefined` and functions drop out and `NaN` becomes `null`); `String(value)` when that fails |
 | `undefined`, `NaN`, `Infinity`, a function | `String(value)`, e.g. `"undefined"` |
 | an exception | `"ERROR: <name>: <message>"`, with the message in the engine's own words |
-| an exception in a `ks.error: <snippet>` key | `"<name>: <message>"`, without the prefix: the text itself is the value |
+| an exception in a `ks.error: <snippet>` or `ks.Function.prototype.toString.call(…)` key | `"<name>: <message>"`, without the prefix: the text itself is the value |
 
 In `inj.*`, a key that is just an owner (`inj.NetworkInformation.prototype`) means the page could not reach that
 owner. Its value is `"undefined"` when the owner does not exist, or `"ERROR: …"` when reaching it threw. In that case

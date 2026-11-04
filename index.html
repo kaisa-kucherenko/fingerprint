@@ -344,12 +344,13 @@ function collectIframeHardware() {
     {key: 'performance.memory?.jsHeapSizeLimit', get: w => w.performance.memory?.jsHeapSizeLimit},
   ];
 
-  function compareWindow(iframeName, iframeWin, result) {
+  // ifrVals: values a frame read about itself and posted back, for a frame the parent cannot reach.
+  function compareWindow(iframeName, iframeWin, result, ifrVals) {
     PROPS.forEach(p => {
       const k = iframeName + ' → ' + p.key;
       try {
         const mainVal = p.get(window);
-        const ifrVal = p.get(iframeWin);
+        const ifrVal = ifrVals ? frameValue(ifrVals[p.key]) : p.get(iframeWin);
         const mainStr = String(mainVal);
         const ifrStr = String(ifrVal);
         if (mainStr === ifrStr) {
@@ -364,7 +365,12 @@ function collectIframeHardware() {
     });
   }
 
-  function advancedChecks(iframeName, iframeWin, result) {
+  function frameValue(v) {
+    if (!v || 'e' in v) throw new Error(v ? v.e : 'no value from the frame');
+    return v.v;
+  }
+
+  function advancedChecks(iframeName, iframeWin, result, mainStr) {
     // Prototype chain check — hardwareConcurrency should be on prototype, not instance
     const k1 = iframeName + ' → hardwareConcurrency prototype check';
     try {
@@ -412,7 +418,7 @@ function collectIframeHardware() {
     const k4 = iframeName + ' → Function.prototype.toString integrity';
     try {
       const ifrStr = iframeWin.Function.prototype.toString.toString();
-      const mainStr = Function.prototype.toString.toString();
+      if (mainStr === undefined) mainStr = Function.prototype.toString.toString();
       if (ifrStr === mainStr) {
         result[k4] = 'PASS: matches main window';
       } else {
@@ -454,15 +460,45 @@ function collectIframeHardware() {
       result['dynamic iframe (immediate) → access'] = {toString() { return 'BLOCKED: ' + e.message; }, _warn: true};
     }
 
-    // 4. sandbox iframe
-    const sandboxIf = createIframe({sandbox: 'allow-scripts', srcdoc: '<html><body><script><\/script></body></html>'});
+    // 4. sandbox iframe — opaque origin, so the parent cannot read it; the frame runs the same
+    // reads on itself and posts the values back.
+    // Building it stringifies functions, which a patched toString can make throw.
+    let sandboxProbe;
+    try {
+      sandboxProbe = `try {
+const PROPS = [${PROPS.map(p => `{key: ${JSON.stringify(p.key)}, get: ${p.get}}`).join(',\n')}];
+${advancedChecks}
+const vals = {};
+for (const p of PROPS) {
+  try { vals[p.key] = {v: String(p.get(window))}; } catch (e) { vals[p.key] = {e: String(e && e.message)}; }
+}
+const r = {};
+advancedChecks('sandbox iframe', window, r, ${JSON.stringify(Function.prototype.toString.toString())});
+const adv = {};
+for (const k in r) adv[k] = {t: String(r[k]), fail: !!r[k]._fail, warn: !!r[k]._warn};
+parent.postMessage({fpSandbox: true, vals, adv}, '*');
+} catch (e) { parent.postMessage({fpSandbox: true, error: String(e && e.message)}, '*'); }`;
+    } catch (e) {
+      const why = JSON.stringify('probe not built: ' + errorText(e)).replace(/</g, '\\u003c');
+      sandboxProbe = `parent.postMessage({fpSandbox: true, error: ${why}}, '*');`;
+    }
+    const sandboxIf = createIframe({sandbox: 'allow-scripts', srcdoc: '<html><body><script>' + sandboxProbe + '<\/script></body></html>'});
     iframes.push(sandboxIf);
+    const sandboxMsg = new Promise(res => {
+      const onMsg = e => {
+        if (e.source !== sandboxIf.contentWindow || !e.data || !e.data.fpSandbox) return;
+        window.removeEventListener('message', onMsg);
+        res(e.data);
+      };
+      window.addEventListener('message', onMsg);
+      setTimeout(() => { window.removeEventListener('message', onMsg); res(null); }, 1000);
+    });
 
     // 5. nested iframe — outer srcdoc creates inner iframe
     const nestedOuter = createIframe({srcdoc: '<html><body><iframe id="inner" srcdoc="<html><body><script><\\/script></body></html>"></iframe><script><\/script></body></html>'});
     iframes.push(nestedOuter);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       // srcdoc
       try {
         compareWindow('srcdoc iframe', srcdocIf.contentWindow, result);
@@ -487,11 +523,27 @@ function collectIframeHardware() {
       }
 
       // sandbox
-      try {
-        compareWindow('sandbox iframe', sandboxIf.contentWindow, result);
-        advancedChecks('sandbox iframe', sandboxIf.contentWindow, result);
-      } catch(e) {
-        result['sandbox iframe → access'] = {toString() { return 'BLOCKED: ' + e.message; }, _warn: true};
+      const sb = await sandboxMsg;
+      let why = !sb ? 'no message from the frame within 1000 ms' : 'error' in sb ? 'frame: ' + sb.error : null;
+      if (!why) {
+        try {
+          compareWindow('sandbox iframe', null, result, sb.vals);
+          for (const [k, a] of Object.entries(sb.adv)) {
+            if (!a.fail && !a.warn) { result[k] = a.t; continue; }
+            const v = {toString() { return a.t; }};
+            if (a.fail) v._fail = true;
+            if (a.warn) v._warn = true;
+            result[k] = v;
+          }
+        } catch (e) {
+          why = errorText(e);
+        }
+      }
+      // On failure every sandbox key is still written, BLOCKED, in its usual order.
+      if (why) {
+        const blocked = {e: why};
+        compareWindow('sandbox iframe', null, result, Object.fromEntries(PROPS.map(p => [p.key, blocked])));
+        advancedChecks('sandbox iframe', new Proxy({}, {get() { throw new Error(why); }}), result);
       }
 
       // nested — wait extra for inner iframe
@@ -1191,7 +1243,9 @@ function rawValue(v) {
   }
   return String(v);
 }
-function errorOf(e) { return 'ERROR: ' + (e && e.name) + ': ' + (e && e.message); }
+// `throw null` is legal JS; reading e.name on it would throw out of the catch.
+function errorText(e) { return (e && e.name) + ': ' + (e && e.message); }
+function errorOf(e) { return 'ERROR: ' + errorText(e); }
 function raw(fn) {
   try { return rawValue(fn()); } catch (e) { return errorOf(e); }
 }
@@ -1252,12 +1306,14 @@ async function collectExtraSurfaces() {
   r['ks.Date()'] = raw(() => Date());
   r['ks.new Date(0).toString()'] = raw(() => new Date(0).toString());
   r['ks.performance.timing'] = raw(() => performance.timing);
-  r['ks.Function.prototype.toString.call(null)'] = raw(() => Function.prototype.toString.call(null));
-  r['ks.Function.prototype.toString.call({})'] = raw(() => Function.prototype.toString.call({}));
+  // The throw is the expected answer, so its text is stored like a ks.error value.
+  const thrown = fn => { try { return rawValue(fn()); } catch (e) { return errorText(e); } };
+  r['ks.Function.prototype.toString.call(null)'] = thrown(() => Function.prototype.toString.call(null));
+  r['ks.Function.prototype.toString.call({})'] = thrown(() => Function.prototype.toString.call({}));
   const hadZ = Object.prototype.hasOwnProperty.call(window, 'z9p3');
   for (const code of ERROR_SNIPPETS) {
     r['ks.error: ' + code] = (() => {
-      try { (0, eval)(code); return 'no throw'; } catch (e) { return e.name + ': ' + e.message; }
+      try { (0, eval)(code); return 'no throw'; } catch (e) { return errorText(e); }
     })();
   }
   // The eval'd `var z9p3` stays on window; later reads must see the browser's own globals.
